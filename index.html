@@ -1,0 +1,672 @@
+<title>PMX Twin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #111111;
+  --sidebar:  #161616;
+  --surface:  #1e1e1e;
+  --surface-2:#272727;
+  --accent:   #d4a017;
+  --text:     #f0f0f0;
+  --text-2:   #888888;
+  --text-3:   #444444;
+  --border:   #2a2a2a;
+  --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono:     'SF Mono', 'Cascadia Code', Consolas, monospace;
+  --sw:       240px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:       #f5f5f5;
+    --sidebar:  #ebebeb;
+    --surface:  #ffffff;
+    --surface-2:#f0f0f0;
+    --accent:   #b8860b;
+    --text:     #111111;
+    --text-2:   #666666;
+    --text-3:   #aaaaaa;
+    --border:   #e0e0e0;
+  }
+}
+
+:root[data-theme="dark"]  { --bg:#111111; --sidebar:#161616; --surface:#1e1e1e; --surface-2:#272727; --accent:#d4a017; --text:#f0f0f0; --text-2:#888888; --text-3:#444444; --border:#2a2a2a; }
+:root[data-theme="light"] { --bg:#f5f5f5; --sidebar:#ebebeb; --surface:#ffffff; --surface-2:#f0f0f0; --accent:#b8860b; --text:#111111; --text-2:#666666; --text-3:#aaaaaa; --border:#e0e0e0; }
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* ── Layout ── */
+#app {
+  display: flex;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sw);
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 4px;
+  overflow-y: auto;
+  transition: transform .25s ease;
+  z-index: 100;
+}
+
+#sidebar::-webkit-scrollbar { width: 3px; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+.sb-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: 4px 8px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.sb-brand span { color: var(--accent); }
+
+.sb-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: 13px var(--font);
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s, border-color .12s;
+  margin-bottom: 8px;
+}
+.sb-btn:hover { background: var(--surface-2); border-color: var(--accent); }
+.sb-btn svg { flex-shrink: 0; color: var(--text-3); }
+
+.sb-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 4px 10px;
+  margin-top: 4px;
+}
+
+.sb-topic {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font: 12.5px/1.4 var(--font);
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s, color .12s;
+}
+.sb-topic:hover { background: var(--surface-2); color: var(--text); }
+.sb-topic svg { flex-shrink: 0; margin-top: 2px; color: var(--text-3); }
+
+.sb-spacer { flex: 1; }
+
+.sb-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sb-version { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+.ico {
+  width: 30px; height: 30px;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--text-3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, color .12s;
+}
+.ico:hover { background: var(--surface-2); color: var(--text); }
+.ico:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Mobile overlay ── */
+#overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+
+@media (max-width: 640px) {
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+  }
+  #sidebar.open { transform: translateX(0); }
+  #overlay.open { display: block; }
+  #hamburger { display: flex !important; }
+}
+
+/* ── Main ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Topbar (mobile only) ── */
+#topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 48px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#hamburger {
+  display: none;
+  width: 32px; height: 32px;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--text-2);
+  cursor: pointer; align-items: center; justify-content: center;
+}
+
+.topbar-brand { font-size: 14px; font-weight: 600; }
+.topbar-brand span { color: var(--accent); }
+
+@media (max-width: 640px) {
+  #topbar { display: flex; }
+}
+
+/* ── Messages ── */
+#msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+#msgs::-webkit-scrollbar { width: 3px; }
+#msgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Welcome ── */
+#welcome {
+  margin: auto;
+  width: 100%;
+  max-width: 520px;
+  padding: 8px 0 24px;
+  animation: up .3s ease both;
+}
+
+#welcome h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+#welcome h2 em { font-style: normal; color: var(--accent); }
+#welcome p  { font-size: 14px; color: var(--text-2); margin-bottom: 20px; }
+
+.chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 400px) { .chips { grid-template-columns: 1fr; } }
+
+.chip {
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: 12.5px/1.4 var(--font);
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .12s, color .12s;
+}
+.chip:hover { border-color: var(--accent); color: var(--text); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Message groups ── */
+.mg {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+  animation: up .15s ease both;
+}
+
+.mg.user      { align-items: flex-end; }
+.mg.assistant { align-items: flex-start; }
+
+.mg-label {
+  font-size: 10.5px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+.mg.user .mg-label { text-align: right; }
+
+.bubble {
+  max-width: min(82%, 560px);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.mg.user .bubble      { background: var(--surface-2); border: 1px solid var(--border); border-bottom-right-radius: 3px; }
+.mg.assistant .bubble { background: var(--surface);   border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.mg.err .bubble       { background: transparent; border: 1px solid #5a2020; color: #e57373; font-size: 13px; align-self: center; max-width: 100%; border-radius: 10px; }
+
+.bubble p { margin: 0 0 7px; } .bubble p:last-child { margin: 0; }
+.bubble strong { font-weight: 600; }
+.bubble em { font-style: italic; color: var(--text-2); }
+.bubble ul, .bubble ol { margin: 5px 0 5px 16px; }
+.bubble li { margin: 2px 0; }
+.bubble h1,.bubble h2,.bubble h3 { font-weight: 600; margin: 0 0 5px; }
+.bubble h1 { font-size: 17px; } .bubble h2 { font-size: 15px; } .bubble h3 { font-size: 14px; }
+.bubble code { font-family: var(--mono); font-size: .84em; background: var(--surface-2); color: var(--accent); padding: .1em .35em; border-radius: 4px; }
+.bubble pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 11px 13px; overflow-x: auto; margin: 7px 0; }
+.bubble pre code { background: none; color: var(--text-2); padding: 0; font-size: .83em; }
+
+/* ── Typing ── */
+.typing {
+  display: flex; align-items: center; gap: 4px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; border-bottom-left-radius: 3px;
+}
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); animation: blink 1.3s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: .16s; }
+.dot:nth-child(3) { animation-delay: .32s; }
+@keyframes blink { 0%,60%,100%{opacity:.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-4px)} }
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 12px 20px 16px;
+  flex-shrink: 0;
+}
+
+.input-row {
+  display: flex; align-items: flex-end; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 8px 8px 14px;
+  transition: border-color .15s;
+}
+.input-row:focus-within { border-color: var(--accent); }
+
+textarea {
+  flex: 1; border: none; outline: none; resize: none;
+  background: transparent; color: var(--text);
+  font: 15px/1.5 var(--font);
+  min-height: 22px; max-height: 140px; overflow-y: auto;
+}
+textarea::placeholder { color: var(--text-3); }
+
+#send {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border: none; border-radius: 7px;
+  background: var(--accent); color: #111;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .12s;
+}
+#send:hover:not(:disabled) { opacity: .8; }
+#send:disabled { opacity: .25; cursor: not-allowed; }
+
+.hint { text-align: center; font-size: 11px; color: var(--text-3); margin-top: 7px; }
+.site-footer { text-align: center; font-size: 11px; color: var(--text-3); margin-top: 5px; }
+.site-footer strong { color: var(--text-2); font-weight: 500; }
+.site-footer a { color: var(--text-2); font-weight: 500; text-decoration: none; }
+.site-footer a:hover { color: var(--accent); text-decoration: underline; }
+
+@keyframes up { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; } }
+
+</style>
+
+<div id="app">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sb-brand">
+      <span>PMX <span>Twin</span></span>
+      <button class="ico" id="theme-btn" aria-label="Toggle theme">
+        <svg id="ico-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg id="ico-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+
+    <button class="sb-btn" id="new-chat-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Perbualan Baru
+    </button>
+
+    <div class="sb-label">Topik Popular</div>
+
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Apakah peranan Perdana Menteri Malaysia?
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Bagaimana seseorang boleh jadi PM Malaysia?
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Senarai semua PM Malaysia dan sumbangan mereka
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Kuasa PM di bawah Perlembagaan Malaysia
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      PM Malaysia yang paling berpengaruh dan kenapa?
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Cabaran utama PM Malaysia hari ini
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Bagaimana PM melantik Kabinet Malaysia?
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Perbezaan PM dan Menteri Besar di Malaysia
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Legasi Tun Mahathir dalam pembangunan Malaysia
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Apakah Dasar Madani PM Anwar Ibrahim?
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Peranan PM dalam dasar luar negara Malaysia
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Sistem parlimen Malaysia dan kedudukan PM
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Bolehkah PM dipecat? Proses undi tidak percaya
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Peranan PM dalam ekonomi dan pelaburan Malaysia
+    </button>
+    <button class="sb-topic" onclick="sendTopic(this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Apa itu Majlis Keselamatan Negara (MKN)?
+    </button>
+
+  </nav>
+
+  <!-- Mobile overlay -->
+  <div id="overlay"></div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Mobile topbar -->
+    <div id="topbar">
+      <button id="hamburger" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <div class="topbar-brand">PMX <span>Twin</span></div>
+      <div style="width:32px"></div>
+    </div>
+
+    <main id="msgs">
+      <div id="welcome">
+        <h2>Selamat Datang, <em>Malaysia</em></h2>
+        <p>Tanya apa sahaja tentang peranan Perdana Menteri Malaysia.</p>
+        <div class="chips">
+          <button class="chip" onclick="useChip(this)">Apakah peranan Perdana Menteri Malaysia?</button>
+          <button class="chip" onclick="useChip(this)">Bagaimana seseorang boleh jadi PM Malaysia?</button>
+          <button class="chip" onclick="useChip(this)">Senarai semua PM Malaysia dan sumbangan mereka</button>
+          <button class="chip" onclick="useChip(this)">Kuasa PM di bawah Perlembagaan Malaysia</button>
+          <button class="chip" onclick="useChip(this)">PM Malaysia yang paling berpengaruh dan kenapa?</button>
+          <button class="chip" onclick="useChip(this)">Cabaran utama PM Malaysia hari ini</button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="input-row">
+        <textarea id="input" rows="1" placeholder="Tanya sesuatu…" aria-label="Your message"></textarea>
+        <button id="send" aria-label="Send">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="hint">Enter to send · Shift+Enter for new line</div>
+      <div class="site-footer">Published by <a href="https://www.plisca.com.my/" target="_blank" rel="noopener">PLISCA (M) SDN BHD</a> &nbsp;·&nbsp; Powered by <strong>SeeNerve</strong> &nbsp;·&nbsp; <a href="https://github.com/deanz93/pmx_chatbot" target="_blank" rel="noopener">GitHub</a></div>
+    </footer>
+  </div>
+</div>
+
+<script>
+const USER_ID = 'robot$pmx_Chatbot';
+
+let history = [], loading = false;
+
+// Theme
+const root = document.documentElement;
+function applyTheme(t) {
+  const e = t === 'auto' ? (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') : t;
+  root.setAttribute('data-theme', e);
+  document.getElementById('ico-sun').style.display  = e === 'dark' ? 'none' : '';
+  document.getElementById('ico-moon').style.display = e === 'dark' ? '' : 'none';
+}
+applyTheme(localStorage.getItem('pmx-theme') || 'auto');
+document.getElementById('theme-btn').onclick = () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('pmx-theme', next);
+  applyTheme(next);
+};
+
+// Sidebar toggle (mobile)
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
+function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+document.getElementById('hamburger').onclick = openSidebar;
+overlay.onclick = closeSidebar;
+
+// Markdown
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function inline(t) {
+  return t.replace(/`([^`\n]+)`/g,'<code>$1</code>')
+          .replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')
+          .replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+}
+function renderMD(raw) {
+  const cbs = [];
+  let t = raw.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => { cbs.push(c.trim()); return `\x02${cbs.length-1}\x02`; });
+  return t.split(/\n{2,}/).map(b => {
+    b = b.trim(); if (!b) return '';
+    if (/^\x02\d+\x02$/.test(b)) return `<pre><code>${esc(cbs[+b.replace(/\x02/g,'')])}</code></pre>`;
+    const hm = b.match(/^(#{1,3}) (.+)/);
+    if (hm) return `<h${hm[1].length}>${inline(esc(hm[2]))}</h${hm[1].length}>`;
+    if (/^[\*\-] /.test(b)) return `<ul>${b.split('\n').filter(Boolean).map(l=>`<li>${inline(esc(l.replace(/^[\*\-] /,'')))}</li>`).join('')}</ul>`;
+    if (/^\d+[\.\)] /.test(b)) return `<ol>${b.split('\n').filter(Boolean).map(l=>`<li>${inline(esc(l.replace(/^\d+[\.\)]\s+/,'')))}</li>`).join('')}</ol>`;
+    return `<p>${b.split('\n').map(l=>inline(esc(l))).join('<br>')}</p>`;
+  }).join('\n');
+}
+
+function extract(d) {
+  if (!d) return null;
+  if (typeof d === 'string') return d;
+  const s = v => typeof v === 'string' ? v : null;
+  return s(d.result?.content)||s(d.result?.message)||(typeof d.result==='string'?d.result:null)
+        ||s(d.response)||s(d.content)||s(d.message?.content)||(typeof d.message==='string'?d.message:null)
+        ||d.choices?.[0]?.message?.content||s(d.output)||s(d.text)||s(d.answer)
+        ||'```json\n'+JSON.stringify(d,null,2)+'\n```';
+}
+
+const now = () => new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});
+const msgs = document.getElementById('msgs');
+
+function removeWelcome() { document.getElementById('welcome')?.remove(); }
+function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
+
+function addMsg(role, content, isErr=false) {
+  removeWelcome();
+  const mg = document.createElement('div');
+  mg.className = 'mg ' + (isErr ? 'err' : role);
+  if (!isErr) {
+    const lbl = document.createElement('div');
+    lbl.className = 'mg-label';
+    lbl.textContent = role === 'user' ? `Anda · ${now()}` : `PMX Twin · ${now()}`;
+    mg.appendChild(lbl);
+  }
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.innerHTML = isErr ? esc(content) : renderMD(content);
+  mg.appendChild(bub);
+  msgs.appendChild(mg);
+  scrollDown();
+}
+
+function showTyping() {
+  removeWelcome();
+  const mg = document.createElement('div');
+  mg.className = 'mg assistant'; mg.id = 'tmg';
+  const lbl = document.createElement('div'); lbl.className = 'mg-label'; lbl.textContent = 'PMX Twin';
+  const t = document.createElement('div'); t.className = 'typing';
+  [0,1,2].forEach(()=>{ const d=document.createElement('div'); d.className='dot'; t.appendChild(d); });
+  mg.appendChild(lbl); mg.appendChild(t);
+  msgs.appendChild(mg); scrollDown();
+}
+function hideTyping() { document.getElementById('tmg')?.remove(); }
+
+// ── Logging ───────────────────────────────────────────────────────────────
+function logPrompt(text) {
+  if (window.va) window.va('event', { name: 'prompt_sent' });
+  fetch('/api/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: text, ts: new Date().toISOString() }),
+  }).catch(() => {}); // fire-and-forget, never block chat
+}
+
+async function send(text) {
+  if (!text.trim() || loading) return;
+  loading = true;
+  document.getElementById('send').disabled = true;
+  document.getElementById('input').disabled = true;
+  logPrompt(text);
+  history.push({role:'user',content:text});
+  addMsg('user', text);
+  showTyping();
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({provider:'ollama',model:'llama3.1:8b',task:'chat',user_id:USER_ID,messages:history})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error||data?.message||`HTTP ${res.status}`);
+    const content = extract(data);
+    if (!content) throw new Error('Respons kosong.');
+    hideTyping();
+    history.push({role:'assistant',content});
+    addMsg('assistant',content);
+  } catch(err) {
+    hideTyping(); history.pop();
+    addMsg('assistant', err.message||'Ralat. Sila cuba lagi.', true);
+  } finally {
+    loading = false;
+    const inp = document.getElementById('input');
+    document.getElementById('send').disabled = false;
+    inp.disabled = false; inp.focus(); resize(inp);
+  }
+}
+
+const CHIPS = [
+  'Apakah peranan Perdana Menteri Malaysia?',
+  'Bagaimana seseorang boleh jadi PM Malaysia?',
+  'Senarai semua PM Malaysia dan sumbangan mereka',
+  'Kuasa PM di bawah Perlembagaan Malaysia',
+  'PM Malaysia yang paling berpengaruh dan kenapa?',
+  'Cabaran utama PM Malaysia hari ini',
+];
+
+function resetWelcome() {
+  msgs.innerHTML = `<div id="welcome">
+    <h2>Selamat Datang, <em>Malaysia</em></h2>
+    <p>Tanya apa sahaja tentang peranan Perdana Menteri Malaysia.</p>
+    <div class="chips">${CHIPS.map(q=>`<button class="chip" onclick="useChip(this)">${q}</button>`).join('')}</div>
+  </div>`;
+}
+
+document.getElementById('new-chat-btn').onclick = () => {
+  history = []; resetWelcome(); closeSidebar();
+};
+
+const inp = document.getElementById('input');
+function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,140)+'px'; }
+inp.addEventListener('input', ()=>resize(inp));
+inp.addEventListener('keydown', e => {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); const v=inp.value.trim(); if(v){inp.value='';resize(inp);send(v);} }
+});
+document.getElementById('send').onclick = () => { const v=inp.value.trim(); if(v){inp.value='';resize(inp);send(v);} };
+
+function useChip(el)    { inp.value=el.textContent.trim(); resize(inp); inp.focus(); }
+function sendTopic(el)  {
+  const text = el.textContent.trim();
+  closeSidebar();
+  inp.value=''; resize(inp);
+  send(text);
+}
+
+inp.focus();
+
+</script>
