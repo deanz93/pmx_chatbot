@@ -271,6 +271,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .mg.user .mg-label { text-align: right; }
 
+.mg-stats {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-top: 5px;
+  padding: 0 2px;
+  display: flex;
+  gap: 10px;
+}
+.mg-stats span { display: flex; align-items: center; gap: 3px; }
+
 .bubble {
   max-width: min(82%, 560px);
   padding: 10px 14px;
@@ -557,7 +568,7 @@ const msgs = document.getElementById('msgs');
 function removeWelcome() { document.getElementById('welcome')?.remove(); }
 function scrollDown() { msgs.scrollTop = msgs.scrollHeight; }
 
-function addMsg(role, content, isErr=false) {
+function addMsg(role, content, isErr=false, stats=null) {
   removeWelcome();
   const mg = document.createElement('div');
   mg.className = 'mg ' + (isErr ? 'err' : role);
@@ -571,6 +582,12 @@ function addMsg(role, content, isErr=false) {
   bub.className = 'bubble';
   bub.innerHTML = isErr ? esc(content) : renderMD(content);
   mg.appendChild(bub);
+  if (stats && role === 'assistant') {
+    const st = document.createElement('div');
+    st.className = 'mg-stats';
+    st.innerHTML = `<span>⏱ ${stats.ms}s</span><span>↑ ${stats.prompt} token</span><span>↓ ${stats.completion} token</span><span>∑ ${stats.total} jumlah</span>`;
+    mg.appendChild(st);
+  }
   msgs.appendChild(mg);
   scrollDown();
 }
@@ -606,6 +623,7 @@ async function send(text) {
   history.push({role:'user',content:text});
   addMsg('user', text);
   showTyping();
+  const t0 = Date.now();
   try {
     const res = await fetch('/api/chat', {
       method:'POST',
@@ -618,7 +636,10 @@ async function send(text) {
     if (!content) throw new Error('Respons kosong.');
     hideTyping();
     history.push({role:'assistant',content});
-    addMsg('assistant',content);
+    const ms = ((Date.now() - t0) / 1000).toFixed(1);
+    const u = data.usage || {};
+    const stats = { ms, prompt: u.prompt_tokens??'—', completion: u.completion_tokens??'—', total: u.total_tokens??'—' };
+    addMsg('assistant', content, false, stats);
   } catch(err) {
     hideTyping(); history.pop();
     addMsg('assistant', err.message||'Ralat. Sila cuba lagi.', true);
