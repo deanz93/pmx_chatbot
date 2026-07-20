@@ -610,7 +610,7 @@ async function send(text) {
     const res = await fetch('/api/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({provider:'ollama',model:'qwen3.5:9b',task:'chat',user_id:USER_ID,messages:history})
+      body:JSON.stringify({provider:'ollama',model:'llama3.1:8b',task:'chat',user_id:USER_ID,messages:history})
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error||data?.message||`HTTP ${res.status}`);
